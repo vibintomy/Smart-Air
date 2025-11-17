@@ -13,7 +13,17 @@ class DBHelper {
   Future<Database> _initDB() async {
     String dbPath = await getDatabasesPath();
     String path = join(dbPath, 'user.db');
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(path, version: 2, onCreate: _createDB,
+     onUpgrade: (db, oldVersion, newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE temperature (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          value REAL
+        )
+      ''');
+    }
+  },);
   }
 
   Future _createDB(Database db, int version) async {
@@ -24,6 +34,12 @@ class DBHelper {
         password TEXT
       )
     ''');
+     await db.execute('''
+    CREATE TABLE temperature (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      value REAL
+    )
+  '''); 
   }
 
   Future<int> insertUser(String userId, String password) async {
@@ -34,4 +50,27 @@ class DBHelper {
       'password': password,
     });
   }
+  Future<int> saveTemperature(double value) async {
+  final db = await database;
+
+  return await db.insert(
+    'temperature',
+    {'value': value},
+  );
+}
+
+Future<double?> getLastTemperature() async {
+  final db = await database;
+
+  final result = await db.query(
+    'temperature',
+    orderBy: 'id DESC',
+    limit: 1,
+  );
+
+  if (result.isNotEmpty) {
+    return result.first['value'] as double;
+  }
+  return null;
+}
 }
