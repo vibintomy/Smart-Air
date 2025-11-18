@@ -27,3 +27,19 @@ class TemperatureCubit extends Cubit<double> {
     await DBHelper().saveTemperature(25.0);
   }
 }
+class PowerSavingCubit extends Cubit<bool> {
+  final DBHelper db = DBHelper();
+
+  PowerSavingCubit() : super(false);
+
+  void loadPowerSaving() async {
+    final value = await db.getPowerSaving();
+    emit(value);
+  }
+
+  void togglePowerSaving() async {
+    final newValue = !state;
+    await db.setPowerSaving(newValue);
+    emit(newValue);
+  }
+}

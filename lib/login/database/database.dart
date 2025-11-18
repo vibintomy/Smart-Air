@@ -40,6 +40,15 @@ class DBHelper {
       value REAL
     )
   '''); 
+   await db.execute('''
+    CREATE TABLE power_saving (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      enabled INTEGER
+    )
+  ''');
+
+  // Insert default (0 = off)
+  await db.insert('power_saving', {'enabled': 0});
   }
 
   Future<int> insertUser(String userId, String password) async {
@@ -73,4 +82,23 @@ Future<double?> getLastTemperature() async {
   }
   return null;
 }
+Future<int> setPowerSaving(bool enabled) async {
+  final db = await database;
+  return await db.update(
+    'power_saving',
+    {'enabled': enabled ? 1 : 0},
+    where: 'id = 1',
+  );
+}
+
+Future<bool> getPowerSaving() async {
+  final db = await database;
+  final result = await db.query('power_saving', where: 'id = 1');
+
+  if (result.isNotEmpty) {
+    return result.first['enabled'] == 1;
+  }
+  return false;
+}
+
 }
